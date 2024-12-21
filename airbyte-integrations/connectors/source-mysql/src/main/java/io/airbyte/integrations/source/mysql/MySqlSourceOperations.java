@@ -112,24 +112,8 @@ public class MySqlSourceOperations extends AbstractJdbcCompatibleSourceOperation
     } else {
       // https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-reference-type-conversions.html
       switch (columnType) {
-        case BIT -> {
-          if (field.getLength() == 1L) {
-            // BIT(1) is boolean
-            putBoolean(json, columnName, resultSet, colIndex);
-          } else {
-            putBinary(json, columnName, resultSet, colIndex);
-          }
-        }
         case BOOLEAN -> putBoolean(json, columnName, resultSet, colIndex);
-        case TINYINT -> {
-          if (field.getLength() == 1L) {
-            // TINYINT(1) is boolean
-            putBoolean(json, columnName, resultSet, colIndex);
-          } else {
-            putShortInt(json, columnName, resultSet, colIndex);
-          }
-        }
-        case TINYINT_UNSIGNED, YEAR -> putShortInt(json, columnName, resultSet, colIndex);
+        case BIT, TINYINT, TINYINT_UNSIGNED, YEAR -> putShortInt(json, columnName, resultSet, colIndex);
         case SMALLINT, SMALLINT_UNSIGNED, MEDIUMINT, MEDIUMINT_UNSIGNED -> putInteger(json, columnName, resultSet, colIndex);
         case INT, INT_UNSIGNED -> {
           if (field.isUnsigned()) {
