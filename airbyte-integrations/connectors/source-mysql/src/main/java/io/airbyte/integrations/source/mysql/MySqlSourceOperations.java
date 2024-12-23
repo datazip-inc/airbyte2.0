@@ -188,13 +188,7 @@ public class MySqlSourceOperations extends AbstractJdbcCompatibleSourceOperation
       final MysqlType literalType = MysqlType.getByName(field.get(INTERNAL_COLUMN_TYPE_NAME).asText());
       final int columnSize = field.get(INTERNAL_COLUMN_SIZE).asInt();
       switch (literalType) {
-        // BIT(1) and TINYINT(1) are interpreted as boolean
-        case BIT, TINYINT -> {
-          if (columnSize == 1) {
-            return MysqlType.BOOLEAN;
-          }
-        }
-        case YEAR -> {
+        case BIT, TINYINT, YEAR -> {
           return SMALLINT;
         }
         // When CHAR[N] and VARCHAR[N] columns have binary character set, the returned
