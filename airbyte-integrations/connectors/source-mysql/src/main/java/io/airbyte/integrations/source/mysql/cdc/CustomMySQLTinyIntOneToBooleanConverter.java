@@ -12,10 +12,12 @@ public class CustomMySQLTinyIntOneToBooleanConverter extends TinyIntOneToBoolean
 
   @Override
   public void converterFor(final RelationalColumn field, final ConverterRegistration<SchemaBuilder> registration) {
-    if (!"TINYINT".equalsIgnoreCase(field.typeName())) {
-      return;
-    }
-    super.converterFor(field, registration);
+//    if (!"TINYINT".equalsIgnoreCase(field.typeName())) {
+//      return;
+//    }else{
+//      return
+//    }
+//    super.converterFor(field, registration);
   }
 
 }

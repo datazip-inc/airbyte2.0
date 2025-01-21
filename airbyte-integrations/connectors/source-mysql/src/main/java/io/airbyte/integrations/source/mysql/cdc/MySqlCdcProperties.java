@@ -82,6 +82,7 @@ public class MySqlCdcProperties {
          * this property is now connectionTimeZone {@link com.mysql.cj.conf.PropertyKey#connectionTimeZone}
          **/
         props.setProperty("database.connectionTimeZone", serverTimeZone);
+        props.setProperty("datetime.server_timezone",serverTimeZone);
       }
     }
 

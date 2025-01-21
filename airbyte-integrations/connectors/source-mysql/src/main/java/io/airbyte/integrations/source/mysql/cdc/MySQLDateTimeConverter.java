@@ -4,14 +4,15 @@
 
 package io.airbyte.integrations.source.mysql.cdc;
 
+import io.airbyte.cdk.db.DataTypeUtils;
 import io.airbyte.cdk.db.jdbc.DateTimeConverter;
 import io.airbyte.cdk.db.jdbc.JdbcDatabase;
 import io.airbyte.cdk.integrations.debezium.internals.DebeziumConverterUtils;
 import io.debezium.spi.converter.CustomConverter;
 import io.debezium.spi.converter.RelationalColumn;
 import io.debezium.time.Conversions;
-import java.time.LocalDate;
-import java.time.LocalTime;
+
+import java.time.*;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Properties;
@@ -36,8 +37,13 @@ public class MySQLDateTimeConverter implements CustomConverter<SchemaBuilder, Re
 
   private final String[] DATE_TYPES = {"DATE", "DATETIME", "TIME", "TIMESTAMP"};
 
+  private String serverTimezome = "UTC";
   @Override
-  public void configure(final Properties props) {}
+  public void configure(final Properties props) {
+    if (props.getProperty("server_timezone")!=null){
+      serverTimezome = props.getProperty("server_timezone");
+    }
+  }
 
   @Override
   public void converterFor(final RelationalColumn field, final ConverterRegistration<SchemaBuilder> registration) {
@@ -83,7 +89,14 @@ public class MySQLDateTimeConverter implements CustomConverter<SchemaBuilder, Re
           }
           return DateTimeConverter.convertToTime(x);
         case "TIMESTAMP":
-          return DateTimeConverter.convertToTimestampWithTimezone(x);
+         String converted = DateTimeConverter.convertToTimestampWithTimezone(x);
+         if (serverTimezome!="UTC") {
+           Instant instant = Instant.parse(converted);
+           // Convert to a different timezone (e.g., America/New_York)
+           ZonedDateTime zonedDateTime = instant.atZone(ZoneId.of(serverTimezome));
+           return zonedDateTime.format(DataTypeUtils.TIMESTAMP_FORMATTER);
+         }
+         return converted;
         default:
           throw new IllegalArgumentException("Unknown field type  " + fieldType.toUpperCase(Locale.ROOT));
       }
@@ -91,3 +104,5 @@ public class MySQLDateTimeConverter implements CustomConverter<SchemaBuilder, Re
   }
 
 }
+
+
