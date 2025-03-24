@@ -183,7 +183,7 @@ class MySqlSourceCdcTemporalConverter : RelationalColumnCustomConverter {
                     if (it is ZonedDateTime) {
                         if (serverTimezone != "UTC") {
                             val offsetDateTime =  Instant.parse(it.toInstant().toString()).atZone(ZoneId.of(serverTimezone)).toLocalDateTime()
-                            val formattedValue = offsetDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS"))
+                            val formattedValue = offsetDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSS"))
                             Converted(formattedValue)
                         }else {
                             val offsetDateTime: OffsetDateTime = it.toOffsetDateTime()
