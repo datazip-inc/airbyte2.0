@@ -23,6 +23,7 @@ import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.*
 import org.apache.kafka.connect.data.SchemaBuilder
@@ -182,7 +183,8 @@ class MySqlSourceCdcTemporalConverter : RelationalColumnCustomConverter {
                     if (it is ZonedDateTime) {
                         if (serverTimezone != "UTC") {
                             val offsetDateTime =  Instant.parse(it.toInstant().toString()).atZone(ZoneId.of(serverTimezone)).toLocalDateTime()
-                            Converted(offsetDateTime.format(OffsetDateTimeCodec.formatter))
+                            val formattedValue = offsetDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSSSSS"))
+                            Converted(formattedValue)
                         }else {
                             val offsetDateTime: OffsetDateTime = it.toOffsetDateTime()
                             Converted(offsetDateTime.format(OffsetDateTimeCodec.formatter))
