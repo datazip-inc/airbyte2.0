@@ -20,25 +20,31 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.OffsetDateTime
+import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
+import java.util.*
 import org.apache.kafka.connect.data.SchemaBuilder
 
 class MySqlSourceCdcTemporalConverter : RelationalColumnCustomConverter {
 
     override val debeziumPropertiesKey: String = "temporal"
-
+    private var serverTimezone: String = "UTC"
     override val handlers: List<RelationalColumnCustomConverter.Handler> =
         listOf(
-            DatetimeMillisHandler,
-            DatetimeMicrosHandler,
-            DateHandler,
-            TimeHandler,
-            TimestampHandler
+            DatetimeMillisHandler(),
+            DatetimeMicrosHandler(),
+            DateHandler(),
+            TimeHandler(),
+            TimestampHandler()
         )
 
-    data object DatetimeMillisHandler : RelationalColumnCustomConverter.Handler {
+    override fun configure(props: Properties?) {
+        serverTimezone = props?.getProperty("connectionTimezone") ?: "UTC"
+    }
+    
+    inner class DatetimeMillisHandler : RelationalColumnCustomConverter.Handler {
 
         override fun matches(column: RelationalColumn): Boolean =
             column.typeName().equals("DATETIME", ignoreCase = true) &&
@@ -71,7 +77,7 @@ class MySqlSourceCdcTemporalConverter : RelationalColumnCustomConverter {
             )
     }
 
-    data object DatetimeMicrosHandler : RelationalColumnCustomConverter.Handler {
+    inner class DatetimeMicrosHandler : RelationalColumnCustomConverter.Handler {
 
         override fun matches(column: RelationalColumn): Boolean =
             column.typeName().equals("DATETIME", ignoreCase = true) && column.length().orElse(0) > 3
@@ -103,7 +109,7 @@ class MySqlSourceCdcTemporalConverter : RelationalColumnCustomConverter {
             )
     }
 
-    data object DateHandler : RelationalColumnCustomConverter.Handler {
+    inner class DateHandler : RelationalColumnCustomConverter.Handler {
 
         override fun matches(column: RelationalColumn): Boolean =
             column.typeName().equals("DATE", ignoreCase = true)
@@ -132,7 +138,7 @@ class MySqlSourceCdcTemporalConverter : RelationalColumnCustomConverter {
             )
     }
 
-    data object TimeHandler : RelationalColumnCustomConverter.Handler {
+    inner class TimeHandler : RelationalColumnCustomConverter.Handler {
 
         override fun matches(column: RelationalColumn): Boolean =
             column.typeName().equals("TIME", ignoreCase = true)
@@ -163,7 +169,7 @@ class MySqlSourceCdcTemporalConverter : RelationalColumnCustomConverter {
             )
     }
 
-    data object TimestampHandler : RelationalColumnCustomConverter.Handler {
+    inner class TimestampHandler : RelationalColumnCustomConverter.Handler {
         override fun matches(column: RelationalColumn): Boolean =
             column.typeName().equals("TIMESTAMP", ignoreCase = true)
 
@@ -174,8 +180,13 @@ class MySqlSourceCdcTemporalConverter : RelationalColumnCustomConverter {
                 NullFallThrough,
                 PartialConverter {
                     if (it is ZonedDateTime) {
-                        val offsetDateTime: OffsetDateTime = it.toOffsetDateTime()
-                        Converted(offsetDateTime.format(OffsetDateTimeCodec.formatter))
+                        if (serverTimezone != "UTC") {
+                            val offsetDateTime =  Instant.parse(it.toInstant().toString()).atZone(ZoneId.of(serverTimezone)).toLocalDateTime()
+                            Converted(offsetDateTime.format(OffsetDateTimeCodec.formatter))
+                        }else {
+                            val offsetDateTime: OffsetDateTime = it.toOffsetDateTime()
+                            Converted(offsetDateTime.format(OffsetDateTimeCodec.formatter))
+                        }
                     } else {
                         NoConversion
                     }
