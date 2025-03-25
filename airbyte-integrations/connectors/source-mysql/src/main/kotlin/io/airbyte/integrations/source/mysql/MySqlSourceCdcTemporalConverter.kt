@@ -55,7 +55,13 @@ class MySqlSourceCdcTemporalConverter : RelationalColumnCustomConverter {
 
         override val partialConverters: List<PartialConverter> =
             listOf(
-                NullFallThrough,
+                PartialConverter {
+                    if (it == null || it == 0) {
+                        Converted("1970-01-01T00:00:00.000000")
+                    } else {
+                        NoConversion
+                    }
+                },
                 PartialConverter {
                     if (it is LocalDateTime) {
                         Converted(it.format(LocalDateTimeCodec.formatter))
@@ -87,7 +93,13 @@ class MySqlSourceCdcTemporalConverter : RelationalColumnCustomConverter {
 
         override val partialConverters: List<PartialConverter> =
             listOf(
-                NullFallThrough,
+                PartialConverter {
+                    if (it == null  || it == 0) {
+                        Converted("1970-01-01T00:00:00.000000")
+                    }else {
+                        NoConversion
+                    }
+                },
                 PartialConverter {
                     if (it is LocalDateTime) {
                         Converted(it.format(LocalDateTimeCodec.formatter))
@@ -121,8 +133,10 @@ class MySqlSourceCdcTemporalConverter : RelationalColumnCustomConverter {
             listOf(
                 PartialConverter {
                     if (it == null || it == 0) {
-                        Converted("")
-                    } else NoConversion
+                        Converted("1970-01-01")
+                    } else {
+                        NoConversion
+                    }
                 },
                 PartialConverter {
                     if (it is LocalDate) {
@@ -182,7 +196,13 @@ class MySqlSourceCdcTemporalConverter : RelationalColumnCustomConverter {
 
         override val partialConverters: List<PartialConverter> =
             listOf(
-                NullFallThrough,
+                PartialConverter {
+                    if (it == null || it == 0) {
+                        Converted("1970-01-01T00:00:00.000000")
+                    } else {
+                        NoConversion
+                    }
+                },
                 PartialConverter {
                     if (it is ZonedDateTime) {
                         if (serverTimezone != "UTC") {
