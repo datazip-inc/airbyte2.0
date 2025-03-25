@@ -119,7 +119,11 @@ class MySqlSourceCdcTemporalConverter : RelationalColumnCustomConverter {
 
         override val partialConverters: List<PartialConverter> =
             listOf(
-                NullFallThrough,
+                PartialConverter {
+                    if (it == null || it == 0) {
+                        Converted("")
+                    } else NoConversion
+                },
                 PartialConverter {
                     if (it is LocalDate) {
                         Converted(it.format(LocalDateCodec.formatter))
