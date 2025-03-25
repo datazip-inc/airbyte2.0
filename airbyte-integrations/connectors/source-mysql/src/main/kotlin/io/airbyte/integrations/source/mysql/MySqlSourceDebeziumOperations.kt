@@ -434,13 +434,15 @@ class MySqlSourceDebeziumOperations(
                 .withOffset()
                 .withSchemaHistory()
                 .withConverters(
-                    MySqlSourceCdcBooleanConverter::class,
                     MySqlSourceCdcTemporalConverter::class
                 )
 
         cdcIncrementalConfiguration.serverTimezone
             ?.takeUnless { it.isBlank() }
-            ?.let { dbzPropertiesBuilder.withDatabase("connectionTimezone", it) }
+            ?.let {
+                dbzPropertiesBuilder.withDatabase("connectionTimezone", it)
+                dbzPropertiesBuilder.with("temporal.connectionTimezone", it)
+            }
 
         dbzPropertiesBuilder.buildMap()
     }
