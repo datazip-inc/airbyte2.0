@@ -334,7 +334,15 @@ public class MySqlDebeziumStateUtil implements DebeziumStateUtil {
 
   public static MysqlDebeziumStateAttributes getStateAttributesFromDB(final JdbcDatabase database) {
     try (final Stream<MysqlDebeziumStateAttributes> stream = database.unsafeResultSetQuery(
-        connection -> connection.createStatement().executeQuery("SHOW MASTER STATUS"),
+        connection -> {
+          try {
+            return connection.createStatement().executeQuery("SHOW MASTER STATUS");
+          } catch (SQLException e) {
+            LOGGER.warn("SHOW MASTER STATUS failed, falling back to SHOW BINARY LOGS", e);
+            // fallback query
+            return connection.createStatement().executeQuery("SHOW BINARY LOG STATUS");
+          }
+        },
         resultSet -> {
           final String file = resultSet.getString("File");
           final long position = resultSet.getLong("Position");
